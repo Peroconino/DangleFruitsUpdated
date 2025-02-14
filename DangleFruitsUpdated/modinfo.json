@@ -1,0 +1,10 @@
+{
+  "id": "Peroconino.DangleFruitsUpdated",
+  "name": "Fruits Updated",
+  "version": "1.0.0",
+  "authors": "Peroconino",
+  "description": "Adds a variety of fruits to the game.",
+  "requirements": [],
+  "requirements_names": [],
+  "checksum_override_version": true
+}
