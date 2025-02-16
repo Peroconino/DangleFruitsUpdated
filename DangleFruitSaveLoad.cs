@@ -50,7 +50,7 @@ public partial class DangleFruitsUpdated
         )
         {
           fruitsSaveData.Add(fruitID, new FruitFileData(fruitID, isShelter, fruitType));
-          Logger.LogInfo($"Loaded fruit:: ID:{fruitID} - isShelter:{isShelter} - type:{fruitType}");
+          CustomLogger.LogInfo($"Loaded fruit:: ID:{fruitID} - isShelter:{isShelter} - type:{fruitType}");
         }
       }
 
@@ -82,7 +82,7 @@ public partial class DangleFruitsUpdated
                 isShelter,
                 foodType
             );
-            Logger.LogInfo($"Saved fruit:: ID:{fruitID} - isShelter:{isShelter} - type:{foodType}");
+            CustomLogger.LogInfo($"Saved fruit:: ID:{fruitID} - isShelter:{isShelter} - type:{foodType}");
           }
         }
       }
@@ -115,7 +115,7 @@ public partial class DangleFruitsUpdated
             // Se encontrar nossos dados no arquivo
             if (content.Contains(FoodTypeTag))
             {
-              Logger.LogInfo($"Cleaning mod data from file: {Path.GetFileName(filePath)}");
+              CustomLogger.LogInfo($"Cleaning mod data from file: {Path.GetFileName(filePath)}");
 
               // Limpa os dados e salva
               string cleanedContent = CleanModData(content);
@@ -124,7 +124,7 @@ public partial class DangleFruitsUpdated
           }
           catch (Exception ex)
           {
-            Logger.LogError($"Error processing file {filePath}: {ex.Message}");
+            CustomLogger.LogError($"Error processing file {filePath}: {ex.Message}");
             // Continua para o próximo arquivo mesmo se este falhar
           }
         }
@@ -132,7 +132,7 @@ public partial class DangleFruitsUpdated
     }
     catch (Exception ex)
     {
-      Logger.LogError($"Critical error during save cleanup: {ex.Message}");
+      CustomLogger.LogError($"Critical error during save cleanup: {ex.Message}");
     }
   }
   // Método para limpar dados do mod do arquivo de save

@@ -5,11 +5,10 @@ using UnityEngine;
 
 namespace DangleFruitsUpdated;
 
-public class DangleFruitsUpdatedOptions : OptionInterface
+partial class DangleFruitsUpdatedOptions : OptionInterface
 {
-    private readonly ManualLogSource Logger;
-
-    public DangleFruitsUpdatedOptions(DangleFruitsUpdated modInstance, ManualLogSource loggerSource)
+    private readonly CustomLogger Logger;
+    public DangleFruitsUpdatedOptions(DangleFruitsUpdated modInstance, CustomLogger loggerSource)
     {
         Logger = loggerSource;
         PlayerSpeed = this.config.Bind<float>("PlayerSpeed", 1f, new ConfigAcceptableRange<float>(0f, 100f));

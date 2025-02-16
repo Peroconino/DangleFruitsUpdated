@@ -17,6 +17,7 @@ namespace DangleFruitsUpdated;
 public partial class DangleFruitsUpdated : BaseUnityPlugin
 {
     private readonly DangleFruitsUpdatedOptions Options;
+    private CustomLogger CustomLogger;
     public const string GUID = "Peroconino.DangleFruitsUpdated";
     public const string Version = "1.0.0";
     public const string Name = "Fruits Updated";
@@ -26,23 +27,18 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
     {
         try
         {
-            Options = new DangleFruitsUpdatedOptions(this, Logger);
+            Options = new DangleFruitsUpdatedOptions(this, CustomLogger);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex);
+            CustomLogger?.LogError(ex);
         }
     }
     private void OnEnable()
     {
         On.RainWorld.OnModsInit += RainWorldOnOnModsInit;
-        Application.quitting += OnApplicationQuit;
     }
     private void OnDisable()
-    {
-        CleanData();
-    }
-    private void OnApplicationQuit()
     {
         CleanData();
     }
@@ -53,6 +49,7 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
 
         try
         {
+            CustomLogger = new CustomLogger(Logger);
             //Para cada fruta guardamos um valor customizado no dicionario
             On.DangleFruit.ctor += hook_DangleFruit_ctor;
             // Quando a fruta for usada
@@ -70,7 +67,7 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex);
+            CustomLogger.LogError(ex);
         }
     }
     public void hook_DangleFruit_ctor(On.DangleFruit.orig_ctor orig, DangleFruit self, AbstractPhysicalObject abstractPhysicalObject)
@@ -108,8 +105,8 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
         }
 
         customFruitTypes[self] = fruitType;
-        if (ModManager.DevTools)
-            Logger.LogInfo($"Fruit type: {fruitType} created with chance: {randomChance}");
+
+        CustomLogger.LogInfo($"Fruit type: {fruitType} created with chance: {randomChance}");
     }
     public void hook_Player_ObjectEaten(On.Player.orig_ObjectEaten orig, Player self, IPlayerEdible fruit)
     {
@@ -158,8 +155,7 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
             }
 
             // NOTE: Limpar o dicionário quando a fruta for consumida
-            if (ModManager.DevTools)
-                Logger.LogInfo($"Fruit {fruit} of type {foodType} being removed from dictionaries");
+            CustomLogger.LogInfo($"Fruit {fruit} of type {foodType} being removed from dictionaries");
 
             // Aplica efeitos baseados no tipo da fruta
             ApplyFruitEffect(self, fruit, customFruitTypes);
