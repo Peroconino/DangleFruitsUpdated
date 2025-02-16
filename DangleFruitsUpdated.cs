@@ -4,6 +4,7 @@ using System.Security.Permissions;
 using UnityEngine;
 using BepInEx;
 using System.Collections.Generic;
+using System.IO;
 
 #pragma warning disable CS0618
 
@@ -20,8 +21,6 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
     public const string Version = "1.0.0";
     public const string Name = "Fruits Updated";
     private bool IsInit;
-    //NOTE: Necessário dois dicionarios para salvar e recuperar os dados das frutas em arquivo
-    public readonly Dictionary<EntityID, int> customFruitIDs = [];
     public readonly Dictionary<IPlayerEdible, int> customFruitTypes = [];
     public DangleFruitsUpdated()
     {
@@ -37,6 +36,15 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
     private void OnEnable()
     {
         On.RainWorld.OnModsInit += RainWorldOnOnModsInit;
+        Application.quitting += OnApplicationQuit;
+    }
+    private void OnDisable()
+    {
+        CleanData();
+    }
+    private void OnApplicationQuit()
+    {
+        CleanData();
     }
     private void RainWorldOnOnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
     {
@@ -45,16 +53,20 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
 
         try
         {
-            IsInit = true;
             //Para cada fruta guardamos um valor customizado no dicionario
             On.DangleFruit.ctor += hook_DangleFruit_ctor;
             // Quando a fruta for usada
-            On.Player.ObjectEaten += hook_ObjectEaten;
-            // Muda a cor da fruta dependendo do valor de comida
-            On.DangleFruit.ApplyPalette += hook_ApplyPalette;
+            On.Player.ObjectEaten += hook_Player_ObjectEaten;
+            // Muda a cor da fruta dependendo do tipo
+            On.DangleFruit.ApplyPalette += hook_DangleFruit_ApplyPalette;
             // Aplica efeitos customizados ao consumir a fruta
             On.Player.Update += hook_Player_Update;
+            // Salvar e carregar dados das frutas
+            On.SaveState.LoadGame += hook_SaveState_LoadGame;
+            On.SaveState.SaveToString += hook_SaveState_SaveToString;
+            // pegar rwgame para salvar e carregar
             MachineConnector.SetRegisteredOI(GUID, Options);
+            IsInit = true;
         }
         catch (Exception ex)
         {
@@ -64,13 +76,16 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
     public void hook_DangleFruit_ctor(On.DangleFruit.orig_ctor orig, DangleFruit self, AbstractPhysicalObject abstractPhysicalObject)
     {
         orig(self, abstractPhysicalObject);
+
+
         EntityID fruitID = self.AbstrConsumable.ID;
         // Verifica se a fruta já tem um valor no dicionario
-        if (customFruitIDs.ContainsKey(fruitID))
+        if (fruitsSaveData.ContainsKey(fruitID))
         {
-            customFruitTypes[self] = customFruitIDs[fruitID];
+            customFruitTypes[self] = fruitsSaveData[fruitID].foodType;
             return;
         }
+
         // Cada fruta pode ter um valor aleatório diferente
         float randomChance = UnityEngine.Random.Range(0f, 1f);
         int fruitType;
@@ -88,17 +103,15 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
         }
         else
         {
-            fruitType = (int)DangleFruitCustomConstants.FruitTypeColors.Blue;
+            //fruta normal não precisa ser inserida no dicionário
+            return;
         }
 
-
-        customFruitIDs[fruitID] = fruitType;
         customFruitTypes[self] = fruitType;
-
         if (ModManager.DevTools)
             Logger.LogInfo($"Fruit type: {fruitType} created with chance: {randomChance}");
     }
-    public void hook_ObjectEaten(On.Player.orig_ObjectEaten orig, Player self, IPlayerEdible fruit)
+    public void hook_Player_ObjectEaten(On.Player.orig_ObjectEaten orig, Player self, IPlayerEdible fruit)
     {
         // Verifica se existe um valor customizado para esta fruta específica
         if (customFruitTypes.ContainsKey(fruit))
@@ -150,16 +163,14 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
 
             // Aplica efeitos baseados no tipo da fruta
             ApplyFruitEffect(self, fruit, customFruitTypes);
-            DeleteFruitID(FindFruitID(foodType));
             customFruitTypes.Remove(fruit);
-
 
             return;
         }
 
         orig(self, fruit);
     }
-    public void hook_ApplyPalette(On.DangleFruit.orig_ApplyPalette orig, DangleFruit self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
+    public void hook_DangleFruit_ApplyPalette(On.DangleFruit.orig_ApplyPalette orig, DangleFruit self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
     {
         if (customFruitTypes.ContainsKey(self))
         {
@@ -183,26 +194,5 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
             return;
         }
         orig(self, sLeaser, rCam, palette);
-    }
-    private EntityID? FindFruitID(int type)
-    {
-        foreach (var pair in customFruitIDs)
-        {
-            if (pair.Value == type)
-            {
-                return pair.Key;
-            }
-        }
-        return null;
-    }
-    private bool DeleteFruitID(EntityID? fruitID)
-    {
-
-        if (fruitID is not null && customFruitIDs.ContainsKey((EntityID)fruitID))
-        {
-            customFruitIDs.Remove((EntityID)fruitID);
-            return true;
-        }
-        return false;
     }
 }

@@ -8,6 +8,7 @@ public partial class DangleFruitsUpdated
   private void hook_Player_Update(On.Player.orig_Update orig, Player self, bool eu)
   {
     orig(self, eu);
+
     // caso ele ainda não exista no dicionário, adicionar ele com array vazio de efeitos
     if (!activeEffects.ContainsKey(self))
       return;
