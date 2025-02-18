@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Security;
 using System.Security.Permissions;
-using UnityEngine;
 using BepInEx;
 using System.Collections.Generic;
-using System.IO;
+using HarmonyLib;
 
 #pragma warning disable CS0618
 
@@ -50,6 +49,8 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
         try
         {
             CustomLogger = new CustomLogger(Logger);
+            var harmony = new Harmony(GUID);
+            harmony.PatchAll();
             //Para cada fruta guardamos um valor customizado no dicionario
             On.DangleFruit.ctor += hook_DangleFruit_ctor;
             // Quando a fruta for usada
@@ -154,7 +155,7 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
                 self.spearOnBack.interactionLocked = true;
             }
 
-            // NOTE: Limpar o dicionário quando a fruta for consumida
+            // Limpar o dicionário quando a fruta for consumida
             CustomLogger.LogInfo($"Fruit {fruit} of type {foodType} being removed from dictionaries");
 
             // Aplica efeitos baseados no tipo da fruta
@@ -165,30 +166,5 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
         }
 
         orig(self, fruit);
-    }
-    public void hook_DangleFruit_ApplyPalette(On.DangleFruit.orig_ApplyPalette orig, DangleFruit self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
-    {
-        if (customFruitTypes.ContainsKey(self))
-        {
-            int foodPoints = customFruitTypes[self];
-            sLeaser.sprites[0].color = palette.blackColor;
-            if (ModManager.MSC && rCam.room.game.session is StoryGameSession && rCam.room.world.name == "HR")
-            {
-                self.color = Color.Lerp(RainWorld.SaturatedGold, palette.blackColor, self.darkness);
-                return;
-            }
-
-            //Dependendo do valor de comida, a cor da fruta muda
-            self.color = foodPoints switch
-            {
-                4 => Color.Lerp(RainWorld.SaturatedGold, palette.blackColor, self.darkness),//dourado
-                3 => Color.Lerp(new Color(1f, 0f, 0f), palette.blackColor, self.darkness),//vermelho
-                2 => Color.Lerp(new Color(0f, 1f, 0f), palette.blackColor, self.darkness),//verde
-                _ => Color.Lerp(new Color(0f, 0f, 1f), palette.blackColor, self.darkness),//azul
-            };
-
-            return;
-        }
-        orig(self, sLeaser, rCam, palette);
     }
 }

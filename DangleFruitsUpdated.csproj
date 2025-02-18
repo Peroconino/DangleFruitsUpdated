@@ -11,9 +11,6 @@
 		<Reference Include="0Harmony">
 			<HintPath>$(RainWorldDir)\BepInEx\core\0Harmony.dll</HintPath>
 		</Reference>
-		<Reference Include="0Harmony20">
-			<HintPath>$(RainWorldDir)\BepInEx\core\0Harmony20.dll</HintPath>
-		</Reference>
 		<Reference Include="Assembly-CSharp">
 			<HintPath>$(RainWorldDir)\BepInEx\utils\PUBLIC-Assembly-CSharp.dll</HintPath>
 		</Reference>

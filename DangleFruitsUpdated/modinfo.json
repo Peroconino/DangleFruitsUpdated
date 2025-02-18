@@ -3,8 +3,18 @@
   "name": "Fruits Updated",
   "version": "1.0.0",
   "authors": "Peroconino",
-  "description": "Adds a variety of fruits to the game.",
-  "requirements": [],
-  "requirements_names": [],
-  "checksum_override_version": true
+  "description": "Adds a variety of fruits to the game. Be ready for surprises!",
+  "requirements": [
+    "rwremix",
+    "moreslugcats"
+  ],
+  "requirements_names": [
+    "Rainworld Remix",
+    "More Slugcats"
+  ],
+  "priorities": [
+    "moreslugcats",
+    "rwremix"
+  ],
+  "checksum_override_version": false
 }
