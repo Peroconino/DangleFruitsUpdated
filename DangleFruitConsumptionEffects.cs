@@ -5,7 +5,7 @@ using MoreSlugcats;
 using RWCustom;
 
 namespace DangleFruitsUpdated;
-public partial class DangleFruitsUpdated
+partial class DangleFruitsUpdated
 {
   public static readonly Dictionary<Player, List<ActiveEffect>> activeEffects = [];
   private static Player? player;
@@ -61,14 +61,7 @@ public partial class DangleFruitsUpdated
         case EffectType.FoodLoss:
           if (!effect.HasBeenApplied)
           {
-            if (Random.value >= 0.5f)
-            {
-              self.SubtractFood(effect.Value);
-            }
-            else
-            {
-              self.AddFood(effect.Value);
-            }
+            self.SubtractFood(effect.Value);
             effect.HasBeenApplied = true; // Garante que só acontece uma vez
           }
           break;
@@ -129,6 +122,7 @@ public partial class DangleFruitsUpdated
     }
 
     float randomChance = Random.value;
+    CustomLogger.LogInfo($"Adding effect, chance: {randomChance}");
 
     switch ((DangleFruitCustomConstants.FruitTypeColors)customFruitTypes[fruit])
     {
@@ -144,12 +138,14 @@ public partial class DangleFruitsUpdated
         ApplyMagicalFruitEffect(player, randomChance);
         break;
     }
+
+    CustomLogger.LogInfo($"Player effects {player.abstractCreature.ID}: {string.Join(", ", activeEffects[player].Select(effect => effect.Type))}");
   }
   private void ApplyHotFruitEffect(Player player, float chance)
   {
     if (chance < 0.4f) // 40% chance
     {
-      activeEffects[player].Add(new ActiveEffect(EffectType.Deafen, 60)); //60 milisegundos de surdo
+      activeEffects[player].Add(new ActiveEffect(EffectType.Deafen, 0.1f, 60)); //60 milisegundos de surdo
     }
     else if (chance < 0.7f) // 30% chance
     {
@@ -157,43 +153,44 @@ public partial class DangleFruitsUpdated
     }
     else
     {
-      activeEffects[player].Add(new ActiveEffect(EffectType.ClassMechanicsArtificer, 30f)); // 30% de chance de ganhar habilidades do pyro por 30s
+      activeEffects[player].Add(new ActiveEffect(EffectType.ClassMechanicsArtificer, 30f, 0)); // 30% de chance de ganhar habilidades do pyro por 30s
     }
-    activeEffects[player].Add(new ActiveEffect(EffectType.AddFood, 2)); // Ganha 2 de comida
+    activeEffects[player].Add(new ActiveEffect(EffectType.AddFood, 0.1f, 2)); // Ganha 2 de comida
   }
   private void ApplyMagicalFruitEffect(Player player, float chance)
   {
     if (chance < 0.25f) // 25% chance
     {
-      activeEffects[player].Add(new ActiveEffect(EffectType.AddFood, 4)); // Ganha 4 de comida
+      activeEffects[player].Add(new ActiveEffect(EffectType.AddFood, 0.1f, 4)); // Ganha 4 de comida
     }
     else if (chance < .5f)      // 25% chance
     {
-      activeEffects[player].Add(new ActiveEffect(EffectType.AddFood, 4)); // Ganha 4 de comida
+      activeEffects[player].Add(new ActiveEffect(EffectType.AddFood, 0.1f, 4)); // Ganha 4 de comida
     }
     else if (chance < 0.75f) // 25% chance
     {
-      activeEffects[player].Add(new ActiveEffect(EffectType.KarmaProtection));// Karma reinforce
+      activeEffects[player].Add(new ActiveEffect(EffectType.KarmaProtection, 0.1f, 0));// Karma reinforce
     }
     else
     { // 25% chance
-      activeEffects[player].Add(new ActiveEffect(EffectType.Die)); // Die
+      activeEffects[player].Add(new ActiveEffect(EffectType.Die, 0.1f, 0)); // Die
     }
   }
   private void ApplyPoisonousFruitEffect(Player player, float chance)
   {
     if (chance < 0.3f) // 30% chance de stun
     {
-      activeEffects[player].Add(new ActiveEffect(EffectType.Crafting, 30f));// Crafting 
+      activeEffects[player].Add(new ActiveEffect(EffectType.AddFood, 0.1f, 1));
+      activeEffects[player].Add(new ActiveEffect(EffectType.Crafting, 30, 0));// 30s Crafting 
     }
     else if (chance < 0.5f) // 20% chance de perder comida
     {
-      activeEffects[player].Add(new ActiveEffect(EffectType.FoodLoss, 1)); // Perde 1 de comida
+      activeEffects[player].Add(new ActiveEffect(EffectType.FoodLoss, 0.1f, 1)); // Perde 1 de comida
     }
     else
     {
-      activeEffects[player].Add(new ActiveEffect(EffectType.Stun, 60));
-      activeEffects[player].Add(new ActiveEffect(EffectType.FoodLoss, 1));
+      activeEffects[player].Add(new ActiveEffect(EffectType.FoodLoss, 0.1f, 1));
+      activeEffects[player].Add(new ActiveEffect(EffectType.Stun, 0.1f, 60));
     }
 
     // 30% chance de nada acontecer
@@ -225,7 +222,7 @@ public partial class DangleFruitsUpdated
     KarmaProtection,
   }
   // Classe para rastrear efeitos ativos
-  sealed public class ActiveEffect(EffectType type, float duration = .1f, int value = 0)
+  sealed public class ActiveEffect(EffectType type, float duration, int value)
   {
     public EffectType Type { get; set; } = type;
     public float Duration { get; set; } = duration;

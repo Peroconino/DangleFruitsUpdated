@@ -20,12 +20,12 @@ partial class DangleFruitsUpdated
 
   [HarmonyPatch(typeof(Player), "GraspsCanBeCrafted")]
   [HarmonyPostfix]
-  static void GrapsCanBeCraftedPatch(ref bool __result)
+  static void GrapsCanBeCraftedPatch(ref bool __result, Player __instance)
   {
     // Verifica se o player existe no dicionário e tem o efeito ativo
-    if (player is not null && activeEffects.TryGetValue(player, out var effects))
+    if (__instance is not null && activeEffects.TryGetValue(__instance, out var effects))
     {
-      __result = effects.Any(effect => effect.Type == EffectType.Crafting) && player.CraftingResults != null;
+      __result = effects.Any(effect => effect.Type == EffectType.Crafting) && __instance.CraftingResults != null;
     }
   }
 }

@@ -15,22 +15,22 @@ namespace DangleFruitsUpdated;
 [BepInPlugin(GUID, Name, Version)]
 public partial class DangleFruitsUpdated : BaseUnityPlugin
 {
-    private readonly DangleFruitsUpdatedOptions Options;
-    private CustomLogger CustomLogger;
     public const string GUID = "Peroconino.DangleFruitsUpdated";
     public const string Version = "1.0.0";
     public const string Name = "Fruits Updated";
     private bool IsInit;
+    private readonly DangleFruitsUpdatedOptions Options;
+    private CustomLogger CustomLogger;
     public readonly Dictionary<IPlayerEdible, int> customFruitTypes = [];
     public DangleFruitsUpdated()
     {
         try
         {
-            Options = new DangleFruitsUpdatedOptions(this, CustomLogger);
+            Options = new DangleFruitsUpdatedOptions(this, CustomLogger!);
         }
         catch (Exception ex)
         {
-            CustomLogger?.LogError(ex);
+            CustomLogger!.LogError(ex);
         }
     }
     private void OnEnable()
@@ -50,7 +50,6 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
         {
             CustomLogger = new CustomLogger(Logger);
             var harmony = new Harmony(GUID);
-            harmony.PatchAll();
             //Para cada fruta guardamos um valor customizado no dicionario
             On.DangleFruit.ctor += hook_DangleFruit_ctor;
             // Quando a fruta for usada
@@ -64,6 +63,7 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
             On.SaveState.SaveToString += hook_SaveState_SaveToString;
             // pegar rwgame para salvar e carregar
             MachineConnector.SetRegisteredOI(GUID, Options);
+            harmony.PatchAll();
             IsInit = true;
         }
         catch (Exception ex)
@@ -112,7 +112,7 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
     public void hook_Player_ObjectEaten(On.Player.orig_ObjectEaten orig, Player self, IPlayerEdible fruit)
     {
         // Verifica se existe um valor customizado para esta fruta específica
-        if (customFruitTypes.ContainsKey(fruit))
+        if (customFruitTypes.ContainsKey(fruit) && !self.isNPC)
         {
             int foodType = customFruitTypes[fruit];
             if (self.graphicsModule is not null)
