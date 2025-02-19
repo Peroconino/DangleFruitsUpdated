@@ -1,15 +1,13 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-using MoreSlugcats;
-using RWCustom;
 
 namespace DangleFruitsUpdated;
 partial class DangleFruitsUpdated
 {
   public static readonly Dictionary<Player, List<ActiveEffect>> activeEffects = [];
   private static Player? player;
-  public static void ConsumeMagicalFruit(Player self, Room checkRoom)
+  public static void ConsumeMagicalFruitKarmaAnimator(Player self, Room checkRoom)
   {
     if (!(checkRoom.game.session as StoryGameSession)!.saveState.deathPersistentSaveData.reinforcedKarma && activeEffects[self].Any(effect => effect.Type == EffectType.KarmaProtection))
     {
@@ -105,21 +103,37 @@ partial class DangleFruitsUpdated
         case EffectType.Crafting:
           //Nada aqui por enquanto a função é feita pelo patcher
           break;
+
         case EffectType.KarmaProtection:
-          ConsumeMagicalFruit(self, self.room);
+          ConsumeMagicalFruitKarmaAnimator(self, self.room);
+          break;
+
+        case EffectType.RedIllness:
+          //gonna be applied on Player.ctor
           break;
       }
     }
+  }
+  private void hook_Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature creature, World world)
+  {
+    orig(self, creature, world);
+
+    if (!activeEffects.ContainsKey(self))
+    {
+      activeEffects.Add(self, []);
+    }
+
+    if (activeEffects.ContainsKey(self) && activeEffects[self].Any(effect => effect.Type == EffectType.RedIllness))
+    {
+      self.redsIllness = new RedsIllness(self, self.abstractCreature.world.game.GetStorySession.saveState.cycleNumber);
+      CustomLogger.LogInfo($"Player effects {self.abstractCreature.ID}: {string.Join(", ", activeEffects[self].Select(effect => effect.Type))}");
+    }
+
   }
   private void ApplyFruitEffect(Player player, IPlayerEdible fruit, Dictionary<IPlayerEdible, int> customFruitTypes)
   {
     if (!customFruitTypes.ContainsKey(fruit))
       return;
-
-    if (!activeEffects.ContainsKey(player))
-    {
-      activeEffects.Add(player, []);
-    }
 
     float randomChance = Random.value;
     CustomLogger.LogInfo($"Adding effect, chance: {randomChance}");
@@ -145,13 +159,13 @@ partial class DangleFruitsUpdated
   {
     if (chance < 0.4f) // 40% chance
     {
-      activeEffects[player].Add(new ActiveEffect(EffectType.Deafen, 0.1f, 60)); //60 milisegundos de surdo
+      activeEffects[player].Add(new ActiveEffect(EffectType.Deafen, 0.1f, 600)); //60 milisegundos de surdo
     }
-    else if (chance < 0.7f) // 30% chance
+    else if (chance < 0.5f) // 10% chance
     {
       activeEffects[player].Add(new ActiveEffect(EffectType.PyroDeath, 0.1f, 2)); // Morre explodido
     }
-    else
+    else if (chance < 0.8f)
     {
       activeEffects[player].Add(new ActiveEffect(EffectType.ClassMechanicsArtificer, 30f, 0)); // 30% de chance de ganhar habilidades do pyro por 30s
     }
@@ -171,10 +185,16 @@ partial class DangleFruitsUpdated
     {
       activeEffects[player].Add(new ActiveEffect(EffectType.KarmaProtection, 0.1f, 0));// Karma reinforce
     }
+    else if (chance < 0.76f)
+    {
+      // activeEffects[player].Add(new ActiveEffect(EffectType.RedIllness, 0.1f, 0));// ☠
+    }
     else
     { // 25% chance
       activeEffects[player].Add(new ActiveEffect(EffectType.Die, 0.1f, 0)); // Die
     }
+    activeEffects[player].Add(new ActiveEffect(EffectType.RedIllness, 300f, 0));// ☠
+
   }
   private void ApplyPoisonousFruitEffect(Player player, float chance)
   {
@@ -220,6 +240,7 @@ partial class DangleFruitsUpdated
     ClassMechanicsArtificer,
     Crafting,
     KarmaProtection,
+    RedIllness,
   }
   // Classe para rastrear efeitos ativos
   sealed public class ActiveEffect(EffectType type, float duration, int value)

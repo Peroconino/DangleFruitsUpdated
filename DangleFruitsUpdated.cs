@@ -54,6 +54,7 @@ public partial class DangleFruitsUpdated : BaseUnityPlugin
             On.DangleFruit.ctor += hook_DangleFruit_ctor;
             // Quando a fruta for usada
             On.Player.ObjectEaten += hook_Player_ObjectEaten;
+            On.Player.ctor += hook_Player_ctor;
             // Muda a cor da fruta dependendo do tipo
             On.DangleFruit.ApplyPalette += hook_DangleFruit_ApplyPalette;
             // Aplica efeitos customizados ao consumir a fruta
